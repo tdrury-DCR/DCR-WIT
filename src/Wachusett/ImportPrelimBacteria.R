@@ -256,7 +256,7 @@ df.wq$FinalResult <- mapply(FR,x) %>%
 df.wq$FlagCode <- NA
 FLAG <- function(x) {
   if (str_detect(x, "<")) {
-    100     # THEN set to 100 for BDL
+    104     # THEN set to 104 for BDL
   } else if (str_detect(x, ">")){
     101     # THEN set to 101 for ADL
   } else {

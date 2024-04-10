@@ -11,7 +11,7 @@
 # COMMENT OUT BELOW WHEN RUNNING FUNCTION IN SHINY
 
 # Load libraries needed
-
+# 
 # library(tidyverse)
 # library(stringr)
 # library(odbc)
@@ -219,6 +219,29 @@ if (length(dupes2) > 0){
   print(dupes2) # Show the duplicate Unique IDs to user in Shiny
 }
 rm(Uniq)
+
+### Make sure records have matching stage or turbidity times in database
+DateTimesMatch <- dbGetQuery(con, glue("SELECT DateTimeET, Location FROM {database}.{schema}.{ImportTable} WHERE Parameter IN ('Turbidity NTU','Staff Gauge Height')"))
+DateTimesMatch$DateTimeET <- DateTimesMatch$DateTimeET  %>% force_tz("America/New_York")
+
+### Keep only locations that always have matching stage or turbidity times
+locations_timecheck <- locations %>% filter(LocationType == "Tributary",
+                                            LocationCategory %in% c("Primary","Secondary","Long-term Forestry")) %>%
+                                      select(LocationMWRA)
+
+### Filter imported data to only the locations above
+df_no_MISC <- df %>% filter(Location %in% locations_timecheck$LocationMWRA)
+
+### Anti-join to only keep records without location/datetime matches in the database
+UnmatchedDateTimes <- anti_join(df_no_MISC, DateTimesMatch, by=c("DateTimeET"))
+
+### If any unmatched times exist, stop processing and show error to user
+if (length(UnmatchedDateTimes) > 0){
+  # Exit function and send a warning to user
+  stop(paste0("This data file contains ", length(UnmatchedDateTimes),
+              " records with Date/Times not present in Survey123 data for sites: ", paste(unique(sort(UnmatchedDateTimes$Location)), collapse=", ")))
+  print(UnmatchedDateTimes) # Show the duplicate Unique IDs to user in Shiny
+}
 
 ### DataSource ####
 df$DataSource <- file

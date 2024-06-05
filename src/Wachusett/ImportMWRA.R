@@ -706,6 +706,28 @@ IMPORT_DATA <- function(df.wq, df.flags = NULL, path, file, filename.db, process
   }
     
   file.rename(path, paste0(processed_dir,"/", file))
+  ### Run the non-routine survey123 processing script 
+  rscript(
+    script = paste0(wach_team_root, "R-Projects/Projects/Non-Routine_MISC_Survey123/ProcessNonRoutineData.R"), 
+    cmdargs = NULL,
+    libpath = config[["R_lib_Path"]],
+    repos = default_repos(),
+    stdout = "NonRoutineData.log",
+    stderr = "2>&1",
+    poll_connection = FALSE,
+    echo = FALSE,
+    show = FALSE,
+    callback = NULL,
+    block_callback = NULL,
+    spinner = FALSE,
+    system_profile = TRUE,
+    user_profile = TRUE,
+    env = rcmd_safe_env(),
+    timeout = Inf,
+    wd = paste0(wach_team_root, "R-Projects/Projects/Non-Routine_MISC_Survey123/"), 
+    fail_on_status = TRUE,
+    color = FALSE
+  )
   end <- now()
   return(print(glue("Import finished at {end}, \n elapsed time {round(end - start)} seconds")))  
 }

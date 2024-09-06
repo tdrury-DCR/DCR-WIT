@@ -11,7 +11,7 @@
 # COMMENT OUT BELOW WHEN RUNNING FUNCTION IN SHINY
 
 # Load libraries needed
-
+# 
 # library(tidyverse)
 # library(stringr)
 # library(odbc)
@@ -225,9 +225,11 @@ DateTimesMatch <- dbGetQuery(con, glue("SELECT DateTimeET, Location FROM {databa
 DateTimesMatch$DateTimeET <- DateTimesMatch$DateTimeET  %>% force_tz("America/New_York")
 
 ### Keep only locations that always have matching stage or turbidity times
-locations_timecheck <- locations %>% filter(LocationType == "Tributary",
-                                            LocationCategory %in% c("Primary","Secondary","Long-term Forestry")) %>%
+locations_timecheck <- locations %>% 
+  filter(LocationType == "Tributary",
+         LocationCategory %in% c("Primary","Secondary","Long-term Forestry")) %>%
   select(LocationMWRA)
+
 
 ### Filter imported data to only the locations above
 df_no_MISC <- df %>% filter(Location %in% locations_timecheck$LocationMWRA)
@@ -236,6 +238,7 @@ df_no_MISC <- df %>% filter(Location %in% locations_timecheck$LocationMWRA)
 UnmatchedDateTimes <- anti_join(df_no_MISC, DateTimesMatch, by=c("DateTimeET"))
 
 ### If any unmatched times exist, stop processing and show error to user
+
 if (nrow(UnmatchedDateTimes) > 0){
   # Exit function and send a warning to user
   stop(paste0("This data file contains ", nrow(UnmatchedDateTimes),

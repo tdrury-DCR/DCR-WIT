@@ -706,6 +706,7 @@ IMPORT_DATA <- function(df.wq, df.flags = NULL, path, file, filename.db, process
   }
     
   file.rename(path, paste0(processed_dir,"/", file))
+
   end <- now()
   return(print(glue("Import finished at {end}, \n elapsed time {round(end - start)} seconds")))  
 }

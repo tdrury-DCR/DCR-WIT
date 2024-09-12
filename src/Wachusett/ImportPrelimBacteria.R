@@ -357,7 +357,8 @@ df.wq <-  df.wq %>% select(all_of(col.order.wq))
 meanmult <- 2 # Change multiplier if more/less extreme outliers are wanted 
 
 if(max(df.wq$FinalResult)>235){
-  df.wq.means <- df.wq %>% mutate(Date=as_date(DateTimeET)) %>%
+  df.wq.means <- df.wq %>% filter(!Location == "MISC") %>%
+                            mutate(Date=as_date(DateTimeET)) %>%
                             group_by(Date) %>%
                             summarise(DayMean = round(mean(FinalResult),1))
 

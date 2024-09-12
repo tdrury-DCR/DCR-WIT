@@ -362,8 +362,12 @@ if(max(df.wq$FinalResult)>235){
                             summarise(DayMean = round(mean(FinalResult),1))
 
   bact_high <- df.wq %>% 
+<<<<<<< HEAD
     filter(FinalResult > 235,
            !Location == "MISC") %>%
+=======
+    filter(FinalResult > 235) %>%
+>>>>>>> e6e2a13cd7a57247bdf77c2cce5e29175800ebb4
     mutate(Date = as_date(DateTimeET)) %>%
     left_join(.,df.wq.means, by="Date") %>%
     filter(FinalResult > DayMean*meanmult) 

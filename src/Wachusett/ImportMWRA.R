@@ -12,7 +12,7 @@
 # COMMENT OUT BELOW WHEN RUNNING FUNCTION IN SHINY
 
 # # Load libraries needed ####
-# 
+
 # library(tidyverse)
 # library(stringr)
 # library(odbc)

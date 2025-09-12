@@ -264,11 +264,25 @@ Eliminate all duplicates before proceeding.",
   # Set the vector for mapply to operate on
   x <- df.wq$ResultReported
 
-  #### !##### Temporary workaround for FinalResult Issue
-  df.wq$FinalResult <- df.wq$ResultReported
-  df.wq <- df.wq %>% mutate(FinalResult = as.numeric(gsub("<", "", FinalResult)))
-  df.wq$FinalResult <- round(df.wq$FinalResult, digits = 4)
+  # #### !##### Temporary workaround for FinalResult Issue
+  # df.wq$FinalResult <- df.wq$ResultReported
+  # df.wq <- df.wq %>% mutate(FinalResult = as.numeric(gsub("<", "", FinalResult)))
+  # df.wq$FinalResult <- round(df.wq$FinalResult, digits = 4)
 
+  # Function to determine FinalResult
+  FR <- function(x) {
+    if (str_detect(x, "<")) { # BDL
+      as.numeric(gsub("<", "", x), digits = 4) # THEN strip "<" from reported result, make numeric
+    } else if (str_detect(x, ">")) {
+      as.numeric(gsub(">", "", x)) # THEN strip ">" form reported result, make numeric.
+    } else {
+      as.numeric(x)
+    } # ELSE THEN just use Result Reported for Result and make numeric
+  }
+  
+  df.wq$FinalResult <- mapply(FR, x) %>%
+    round(digits = 4)
+  
   # Function to determine FinalResult
   # FR <- function(x) {
   #  if(str_detect(x, "<")){# BDL

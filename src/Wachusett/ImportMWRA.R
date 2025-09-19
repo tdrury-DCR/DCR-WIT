@@ -697,6 +697,9 @@ return(dfs)
 
 
 IMPORT_DATA <- function(df.wq, df.flags = NULL, path, file, filename.db, processedfolder, ImportTable, ImportFlagTable = NULL){
+  data_broker_external <- glue("{wach_team_root}R-Projects/Projects/Data_Broker/Run_Data_Broker_External.R")
+  source(data_broker_external)
+  
   start <- now()
   print(glue("Starting data import at {start}"))
   ### CONNECT TO DATABASE ####
@@ -733,6 +736,12 @@ IMPORT_DATA <- function(df.wq, df.flags = NULL, path, file, filename.db, process
   }
     
   file.rename(path, paste0(processed_dir,"/", file))
+  
+  print("Running MISC/Non-routine monitoring data processing through data broker")
+  
+  # Run the Data Broker pipeline to process MISC-Non-routine samples.
+  misc_samples <- RUN_DATA_BROKER_PIPELINE(pipeline_name = "MISC_Non-routine_Sampling")
+  print(misc_samples)
 
   end <- now()
   return(print(glue("Import finished at {end}, \n elapsed time {round(end - start)} seconds")))  

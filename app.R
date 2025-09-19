@@ -1072,7 +1072,7 @@ server <- function(input, output, session) {
               rscript(
                 script = paste0(user_root, config[["update_WAVE.R"]]), 
                 cmdargs = isolate(rdsList()),
-                libpath = config[["R_lib_Path"]],
+                libpath = r_lib,
                 repos = default_repos(),
                 stdout = "updateWAVE.log",
                 stderr = "2>&1",

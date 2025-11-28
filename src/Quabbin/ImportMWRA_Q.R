@@ -116,7 +116,7 @@ PROCESS_DATA <- function(file, rawdatafolder, filename.db, probe = NULL, ImportT
   # # Check to see if there were any miscellaneous locations that did not get assigned a location
   if (length(which(str_detect(df.wq$Location, "QUABBIN-MISC"), TRUE)) > 0) {
     # Send warning message to UI if TRUE
-    stop("There are unspecified (MISC) locations that need to be corrected before importing data")
+    warning("There are MISC locations in the data. Enter locations in tblMiscSample if needed.")
   }
   # Check to see if there were any GENERAL locations that did not get assigned a location
   if (length(which(str_detect(df.wq$Location, "GENERAL-GEN"), TRUE)) > 0) {
@@ -169,6 +169,9 @@ PROCESS_DATA <- function(file, rawdatafolder, filename.db, probe = NULL, ImportT
     df.wq$DateTimeAnalyzedET <- as_datetime(df.wq$DateTimeAnalyzedET)
   }
 
+  ##Save MISC dataset
+  df.misc <- df.wq %>% slice(which(grepl("Sample Address", df.wq$Parameter, fixed = TRUE)))
+  
   ### Fix the Parameter names ####  - change from MWRA name to ParameterName
   params <- dbReadTable(pool, Id(schema = "Wachusett", table = "tblParameters"))
   df.wq$Parameter <- params$ParameterName[match(df.wq$Parameter, params$ParameterMWRAName)]
@@ -177,8 +180,12 @@ PROCESS_DATA <- function(file, rawdatafolder, filename.db, probe = NULL, ImportT
   df.wq <- df.wq %>% mutate(Parameter = case_when(grepl("Dissolved",ReportedName) & Parameter == "Total Silica" ~ "Dissolved Silica",
                                                   TRUE ~ Parameter))
   
+  # Filter out dissolved Na (it's being accidentally sent to us with dissolved silica)
+  
+  df.wq <- df.wq %>% filter(!(Parameter == "Sodium" & grepl("Dissolved",ReportedName)))
 
   ### Remove records with missing elements/unneeded data ####
+  
   # Delete possible Sample Address rows (Associated with MISC Sample Locations):
   df.wq <- df.wq %>% # Filter out any sample with no results (There shouldn't be, but they do get included sometimes)
     filter(
@@ -186,6 +193,7 @@ PROCESS_DATA <- function(file, rawdatafolder, filename.db, probe = NULL, ImportT
       !is.na(ResultReported)
     )
 
+  
   df.wq <- df.wq %>% slice(which(!grepl("Sample Address", df.wq$Parameter, fixed = TRUE)))
   df.wq <- df.wq %>% slice(which(!grepl("(DEP)", df.wq$Parameter, fixed = TRUE))) # Filter out rows where Parameter contains  "(DEP)"
   df.wq <- df.wq %>% slice(which(!grepl("X", df.wq$Status, fixed = TRUE))) # Filter out records where Status is X
@@ -477,6 +485,7 @@ Eliminate all duplicates before proceeding.",
   dfs[[1]] <- df.wq
   dfs[[2]] <- path
   dfs[[3]] <- df.flags # Removed condition to test for flags and put it in the setFlagIDS() function
+  dfs[[4]] <- df.misc
 
   # Disconnect from db and remove connection obj
   poolClose(pool)

@@ -469,6 +469,15 @@ server <- function(input, output, session) {
     dfs()[[4]]
   })
   
+  quab_misc <- reactive({
+    req(dfs())
+    req(ds()[[1]] == "MWRA Results (Trib and Res Runs)")
+    dfs()[[4]]
+  }
+    
+    
+  )
+  
   ### Import Email Message ####
   qcpath <- reactive({
     gsub(" ","%20", paste0(config[["wach_sp_root"]],config[["QC_Logfiles"]],"/",ImportTable(),"_",input$file,"_",format(Sys.Date(),"%Y-%m-%d"),".txt"))
@@ -612,6 +621,24 @@ server <- function(input, output, session) {
         ))
         }
       }
+      
+      if (ds()[[1]] == "MWRA Results (Trib and Res Runs)") { ### only do this for quabbin trib MWRA data
+        if (nrow(quab_misc()) > 0) {
+          displaytable <- reactive({
+            quab_misc()[c("SampleNumber","ResultReported", "DateTimeET","SampledBy")]
+          })
+          showModal(modalDialog(
+            title = "Warning: MISC Sample(s) processed.",
+            HTML("<h4>Data processing was successful.<br/><br/>At least one MISC sample was present in the data.<br/>Data for the MISC samples are presented below and have also been printed to the WIT log. Enter data below in tblMiscSample before proceeding.</h4><br/>"),
+            renderDataTable(
+              datatable(displaytable()) %>%
+                formatDate(columns = c("DateTimeET"), method = 'toLocaleString')
+            )
+          ))
+        }
+      }
+      
+      
       paste0('The file "', input$file, '" was successfully processed')
       
     }

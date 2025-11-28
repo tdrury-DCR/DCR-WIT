@@ -413,6 +413,17 @@ Eliminate all duplicates before proceeding.",
   }
   df.wq$ID <- setIDs()
 
+  
+  ### Add IDs to matching MISC data
+  if(nrow(df.misc)>0){
+  df.wq_IDS_misc <- df.wq %>% filter(SampleNumber %in% c(df.misc$SampleNumber)) %>% dplyr::select(SampleNumber, ID)
+  df.misc <- left_join(df.misc, df.wq_IDS_misc, by="SampleNumber") %>% 
+    dplyr::select(-Location) %>%
+    mutate(TableName = "tblMWRAResults") %>% 
+    rename("Location" = ResultReported, "RecordNumber" = ID, "Sampler" = SampledBy) %>%
+    select(Location, DateTimeET, TableName, RecordNumber, Sampler) %>%
+    arrange(DateTimeET)
+  }
   ### Flags ####
 
   # First make sure there are flags in the dataset

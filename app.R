@@ -625,11 +625,11 @@ server <- function(input, output, session) {
       if (ds()[[1]] == "MWRA Results (Trib and Res Runs)") { ### only do this for quabbin trib MWRA data
         if (nrow(quab_misc()) > 0) {
           displaytable <- reactive({
-            quab_misc()[c("SampleNumber","ResultReported", "DateTimeET","SampledBy")]
+            quab_misc()[c("Location", "DateTimeET", "TableName", "RecordNumber", "Sampler")]
           })
           showModal(modalDialog(
             title = "Warning: MISC Sample(s) processed.",
-            HTML("<h4>Data processing was successful.<br/><br/>At least one MISC sample was present in the data.<br/>Data for the MISC samples are presented below and have also been printed to the WIT log. Enter data below in tblMiscSample before proceeding.</h4><br/>"),
+            HTML("<h4>Data processing was successful.<br/><br/>At least one MISC sample was present in the data.<br/>Data for the MISC samples are presented below. Enter data below in tblMiscSample before proceeding.</h4><br/>"),
             renderDataTable(
               datatable(displaytable()) %>%
                 formatDate(columns = c("DateTimeET"), method = 'toLocaleString')

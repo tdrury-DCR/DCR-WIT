@@ -51,6 +51,7 @@ QCCHECK <- function(df.qccheck, file, ImportTable, userlocation) {
 
   # Get dataframe for duplicate/blank locations
   dup_df <- dbReadTable(con, Id(schema = "Wachusett", table = "tbl_Field_QC"))
+  dup_df_q <- dbReadTable(con, Id(schema = "Quabbin", table = "tbl_Field_QC"))
   df_wach_param <- dbReadTable(con, Id(schema = "Wachusett", table = "tblParameters"))
   dbDisconnect(con)
   rm(con)
@@ -81,6 +82,9 @@ QCCHECK <- function(df.qccheck, file, ImportTable, userlocation) {
   ### Loop to look for correct parameter/units, compare results with possible min/max, and then QC check against trib_summary
   if (userlocation == "Wachusett") {
   
+    df.qccheckNOgauge <- dplyr::filter(df.qccheckNOgauge, !Location %in% c("WFD1","WFD2","WFD3","WFB1","WFB2"))
+    
+    
   for (i in 1:nrow(df.qccheck)) {
     # Stop if Parameter and Units are not in tblParameters
     if (!df.qccheck$Parameter[i] %in% dplyr::filter(df_wach_param, ParameterName == df.qccheck$Parameter[i], ParameterUnits == df.qccheck$Units[i])$ParameterName &
@@ -173,7 +177,7 @@ QCCHECK <- function(df.qccheck, file, ImportTable, userlocation) {
 
 
     ### Checking duplicates and blanks
-    dups <- df.qccheckNOgauge %>%
+    dups <- df.qccheck %>%
       filter(Location %in% c("WFD1", "WFD2", "WFD3")) %>%
       rename(Duplicate = Location) %>%
       mutate(Date = as.Date(DateTimeET))
@@ -189,10 +193,10 @@ QCCHECK <- function(df.qccheck, file, ImportTable, userlocation) {
         select(Date, Duplicate, Location, Parameter, Units, FinalResult)
 
       # Add date to original dataset
-      df.qccheckNOgauge.date <- df.qccheckNOgauge %>% mutate(Date = as.Date(DateTimeET))
+      df.qccheck.date <- df.qccheck %>% mutate(Date = as.Date(DateTimeET))
 
       # Combine duplicate and trib results
-      dups_combined <- inner_join(dups, df.qccheckNOgauge.date, by = c("Date", "Location", "Parameter", "Units")) %>%
+      dups_combined <- inner_join(dups, df.qccheck.date, by = c("Date", "Location", "Parameter", "Units")) %>%
         rename(
           TribResult = "FinalResult.y",
           DupResult = "FinalResult.x"
@@ -244,7 +248,7 @@ QCCHECK <- function(df.qccheck, file, ImportTable, userlocation) {
     ### Blanks
 
     # Get blanks
-    blanks <- df.qccheckNOgauge %>%
+    blanks <- df.qccheck %>%
       filter(Location %in% c("WFB1", "WFB2")) %>%
       rename(Blank = Location) %>%
       mutate(Date = as.Date(DateTimeET))
@@ -338,6 +342,8 @@ QCCHECK <- function(df.qccheck, file, ImportTable, userlocation) {
 
   if (userlocation == "Quabbin") {
     
+    df.qccheckNOgauge <- dplyr::filter(df.qccheckNOgauge, !Location %in% c("QRD1","WRD1","QRD2","QRD3","WRD2","WRD3","QRB1","QRB2","WRB1","WRB2"))
+    
     for (i in 1:nrow(df.qccheck)) {
       # Stop if Parameter and Units are not in tblParameters
       if (!df.qccheck$Parameter[i] %in% dplyr::filter(df_wach_param, ParameterName == df.qccheck$Parameter[i], ParameterUnits == df.qccheck$Units[i])$ParameterName &
@@ -429,6 +435,77 @@ QCCHECK <- function(df.qccheck, file, ImportTable, userlocation) {
     }
     
     
+    ### Checking duplicates and blanks
+    dups <- df.qccheck %>%
+      filter(Location %in% c("QRD1", "WRD1","QRD2","WRD2")) %>%
+      rename(Duplicate = Location) %>%
+      mutate(Date = as.Date(DateTimeET))
+    
+    # Only proceed if there are duplicates in the data
+    if (nrow(dups) > 0) {
+      # Rename column for joining
+      dup_df_rename <- dup_df %>% rename(Duplicate = Dup_Blank_code)
+      
+      # Join duplicates with locations
+      dups <- inner_join(dups, dup_df_rename, by = c("Date", "Duplicate")) %>%
+        rename(Location = MWRA_Location) %>%
+        select(Date, Duplicate, Location, Parameter, Units, FinalResult)
+      
+      # Add date to original dataset
+      df.qccheck.date <- df.qccheck %>% mutate(Date = as.Date(DateTimeET))
+      
+      # Combine duplicate and trib results
+      dups_combined <- inner_join(dups, df.qccheck.date, by = c("Date", "Location", "Parameter", "Units")) %>%
+        rename(
+          TribResult = "FinalResult.y",
+          DupResult = "FinalResult.x"
+        )
+      
+      ### Calculating RPD for bacteria dups
+      
+      # Analyze bacteria dups
+      bact_dups <- dups_combined %>%
+        filter(Parameter == "E. coli") %>%
+        mutate(
+          Log10DupResult = log10(DupResult),
+          Log10TribResult = log10(TribResult),
+          RPD = round(((abs(Log10TribResult - Log10DupResult) / ((Log10TribResult + Log10DupResult) / 2)) * 100), digits = 1),
+          Pass = BACT_DUP_TEST(TribResult, DupResult, RPD)
+        )
+      
+      # Analyze any DO dups
+      DO_temp_dups <- dups_combined %>%
+        filter(Parameter %in% c("Dissolved Oxygen", "Water Temperature")) %>%
+        mutate(
+          RPD = abs(TribResult - DupResult),
+          Pass = if_else(RPD > 0.2, "FAIL", "PASS")
+        )
+      
+      # Analyze all other dups
+      dups_other <- dups_combined %>%
+        filter(!Parameter %in% c("E. coli", "Dissolved Oxygen", "Water Temperature", "Oxygen Saturation")) %>%
+        mutate(
+          RPD = round(((abs(TribResult - DupResult) / ((TribResult + DupResult) / 2)) * 100), digits = 1),
+          Pass = if_else(RPD > 30, "FAIL", "PASS")
+        )
+      
+      # Combine datasets
+      dups_all <- bind_rows(bact_dups, DO_temp_dups, dups_other)
+      
+      # Get failed dups
+      dups_fail <- filter(dups_all, Pass == "FAIL") %>%
+        rename(
+          DupCode = Duplicate,
+          SampleResult = TribResult,
+          DuplicateResult = DupResult
+        )
+    } else {
+      # If no duplicates in data, create an empty dataframe for failed duplicates
+      dups_fail <- as.data.frame(NULL)
+    }
+    
+    
+    
     ### Print results of outlier check to unique WIT log
     QC_log_dir <- paste0(quab_team_root, config[["QC_Logfiles_Q"]])
     # Delete a log of the same name if it exists
@@ -438,7 +515,7 @@ QCCHECK <- function(df.qccheck, file, ImportTable, userlocation) {
 
     ### If any failed duplicates, add note about it.
 
-    if ((nrow(rangeoutliers) + nrow(statoutliers)) > 0) {
+    if ((nrow(rangeoutliers) + nrow(statoutliers) + nrow(dups_fail)) > 0) {
       options(width = 10000)
       sink(file = paste0(QC_log_dir, "/", ImportTable, "_", file, "_", format(Sys.Date(), "%Y-%m-%d"), ".txt"), append = T)
       cat("WIT Quality Control Log\n\n")
@@ -446,6 +523,14 @@ QCCHECK <- function(df.qccheck, file, ImportTable, userlocation) {
       cat(paste0("File: ", file, "\n"))
       cat(paste0("Database table: ", ImportTable, "\n\n"))
       sink()
+      if (nrow(dups_fail) > 0) {
+        dups_fail <- dups_fail %>% arrange(ID)
+        sink(file = paste0(QC_log_dir, "/", ImportTable, "_", file, "_", format(Sys.Date(), "%Y-%m-%d"), ".txt"), append = T)
+        cat(paste0(nrow(dups_fail), " duplicate(s) outside acceptable RPD.\n\n"), append = T)
+        capture.output(print(dups_fail[c("ID", "Date", "Location", "DupCode", "Parameter", "Units", "SampleResult", "DuplicateResult")], print.gap = 3, right = F, row.names = F), file = paste0(QC_log_dir, "/", ImportTable, "_", file, "_", format(Sys.Date(), "%Y-%m-%d"), ".txt"), append = T)
+        cat("\n\n")
+        sink()
+      }
       if (nrow(rangeoutliers) > 0) {
         rangeoutliers <- rangeoutliers %>% arrange(ID)
         sink(file = paste0(QC_log_dir, "/", ImportTable, "_", file, "_", format(Sys.Date(), "%Y-%m-%d"), ".txt"), append = T)

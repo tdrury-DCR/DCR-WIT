@@ -351,6 +351,87 @@ Eliminate all duplicates before proceeding.",
   }
   df.wq$FlagCode <- mapply(FLAG, x) %>% as.numeric()
 
+  ### Flagging Duplicates ####
+  
+  # Get duplicates
+  dups <- df.wq %>% filter(Location %in% c("QRD1","WRD1")) %>%
+    rename(Duplicate = Location) %>%
+    mutate(Date = as.Date(DateTimeET))
+  
+  # Get table to find which sites duplicates match with, needed for blanks too, so can't be under next If()
+  dup_df <- dbReadTable(pool, Id(schema = schema, table = "tbl_Field_QC"))
+  
+  # Only proceed if there are duplicates
+  if(nrow(dups)>0) {
+    
+    dup_df_rename <- dup_df %>% rename(Duplicate = Dup_Blank_code)
+    
+    # Create temporary dataframe to match regular samples with dups
+    dups <- inner_join(dups, dup_df_rename, by=c("Date","Duplicate")) %>% 
+      rename(Location = MWRA_Location,
+             UniqueID_QC = UniqueID) %>%
+      select(Date, Duplicate, Location, Parameter, Units, FinalResult, UniqueID_QC)
+    
+    # Add date to df.wq which follows through the whole code
+    df.wq.date <- df.wq %>% mutate(Date = as.Date(DateTimeET))
+    
+    # Combine the duplicate dataframe with the full dataframe
+    dups_combined <- inner_join(dups, df.wq.date, by=c("Date","Location","Parameter","Units")) %>%
+      rename(TribResult = "FinalResult.y",
+             DupResult = "FinalResult.x")
+    
+    ### Calculating RPD for bacteria dups and whether it passes. Uses BACT_DUP_TEST function from WITQCTEST.R
+    bact_dups <- dups_combined %>% 
+      filter(Parameter == "E. coli") %>%
+      mutate(Log10DupResult = log10(DupResult),
+             Log10TribResult = log10(TribResult),
+             RPD = round(((abs(Log10TribResult-Log10DupResult)/((Log10TribResult+Log10DupResult)/2))*100),digits=1),
+             Pass = BACT_DUP_TEST(TribResult, DupResult, RPD))
+    
+    ### Calculating RPD for non-bacteria dups and whether they pass
+    dups_other <- dups_combined %>% 
+      filter(!Parameter %in% c("E. coli", "Dissolved Oxygen", "Water Temperature","Oxygen Saturation")) %>%
+      mutate(RPD = round(((abs(TribResult-DupResult)/((TribResult+DupResult)/2))*100),digits=1),
+             Pass = if_else(RPD>30, "FAIL","PASS"))
+    
+    ### Combine dataframes once Pass/Fail determined
+    dups_all <- bind_rows(bact_dups, dups_other)
+    
+    ### Filter out only the fails
+    dups_fail <- filter(dups_all, Pass == "FAIL") 
+    if (nrow(dups_fail > 0)) {
+      ## Get UniqueIDs of the failed dups
+      failed_dups <- dups_fail$UniqueID_QC
+      
+      ## Create unique identifer with Parameter and Date to help match with other samples collected that day
+      dups_fail <- dups_fail %>% dplyr::select(Parameter, Date) %>%
+        mutate(ParameterDate = paste0(Parameter,"_",Date))
+      
+      ## Only keep unique Parameter/Date combos
+      dups_fail_param_date <- unique(dups_fail$ParameterDate)
+      
+      ## Flag failed dups with 129
+      ## Flag samples on same date with same parameter as failed dup as 127
+      df.wq <- df.wq %>% 
+        rowwise() %>% 
+        mutate(Date = as.Date(DateTimeET),
+               ParameterDate = paste0(Parameter,"_",Date),
+               DupFlags = ifelse(startsWith(Location,"M") & (ParameterDate %in% dups_fail_param_date), 127, 
+                                 ifelse(UniqueID %in% failed_dups, 129, NA)))
+    } else {
+      print("There were no failed duplicates to flag")
+      df.wq <- df.wq %>% 
+        mutate(Date = as.Date(DateTimeET),
+               ParameterDate = paste0(Parameter,"_",Date))
+    }
+    
+  } else {
+    
+    # If no duplicates in dataset, DupFlags column is empty
+    df.wq <- df.wq %>% 
+      mutate(DupFlags = NA_integer_)
+  }
+  
   ### Storm SampleN (numeric) ####
   df.wq$StormSampleN <- NA_character_
 
@@ -430,14 +511,29 @@ Eliminate all duplicates before proceeding.",
   setFlagIDs <- function() {
     if (all(is.na(df.wq$FlagCode)) == FALSE) { # Condition returns FALSE if there is at least 1 non-NA value, if so proceed
       # Split the flags into a separate df and assign new ID
-      df.flags <- as.data.frame(dplyr::select(df.wq, c("ID", "FlagCode"))) %>%
+      df.flags.censored <- as.data.frame(dplyr::select(df.wq, c("ID", "FlagCode"))) %>%
         rename("SampleID" = ID) %>%
         drop_na()
     } else {
-      df.flags <- NA
+      df.flags.censored <- as.data.frame(NULL)
     }
 
-    if (class(df.flags) == "data.frame") {
+    ##Dup flags
+    if(all(is.na(df.wq$DupFlags)) == FALSE){ # Condition returns FALSE if there is at least 1 non-NA value, if so proceed
+      # Split the flags into a separate df and assign new ID
+      df.flags.dup <- as.data.frame(select(df.wq, c("ID","DupFlags"))) %>%
+        rename("SampleID" = ID,
+               "FlagCode" = DupFlags) %>%
+        drop_na()
+    } else {
+      df.flags.dup <- as.data.frame(NULL)
+    }
+    
+    # Combine all flag dataframes (if one is empty, it'll be a blank dataframe that will not add a new row)
+    df.flags <- bind_rows(df.flags.censored, df.flags.dup)
+  
+    
+    if (nrow(df.flags) > 0) {
       query.flags <- dbGetQuery(pool, glue("SELECT max(ID) FROM [{schema}].[{ImportFlagTable}]"))
       # Get current max ID
       if (is.na(query.flags)) {
@@ -465,6 +561,7 @@ Eliminate all duplicates before proceeding.",
   df.flags <- setFlagIDs()
 
 
+  
   ##############################################################################################################################
   # Reformatting 2
   ##############################################################################################################################

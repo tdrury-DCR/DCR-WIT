@@ -62,6 +62,10 @@ PROCESS_DATA <- function(file, rawdatafolder, filename.db, probe = NULL, ImportT
   pool <- dbPool(odbc::odbc(), dsn = dsn, uid = dsn, pwd = config[["DB Connection PW"]], timezone = tz)
   
 
+  ### Source WIT QC TEST
+  source("src/Functions/WITQCTEST.R", local = T)
+  
+  
   #################################
   #  START REFORMATTING THE DATA  #
   #################################

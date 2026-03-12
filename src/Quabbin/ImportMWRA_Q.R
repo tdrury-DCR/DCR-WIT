@@ -420,7 +420,7 @@ Eliminate all duplicates before proceeding.",
         rowwise() %>% 
         mutate(Date = as.Date(DateTimeET),
                ParameterDate = paste0(Parameter,"_",Date),
-               DupFlags = ifelse(startsWith(Location,"M") & (ParameterDate %in% dups_fail_param_date), 127, 
+               DupFlags = ifelse(!Location %in% c("QRD1","WRD1") & (ParameterDate %in% dups_fail_param_date), 127, 
                                  ifelse(UniqueID %in% failed_dups, 129, NA)))
     } else {
       print("There were no failed duplicates to flag")

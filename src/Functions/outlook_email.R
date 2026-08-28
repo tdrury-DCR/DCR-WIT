@@ -18,7 +18,7 @@ library(RDCOMClient)
 
 OL_EMAIL <- function(to, cc = "", bcc = "", subject, body) {
   # Open Outlook
-  Outlook <- COMCreate("Outlook.Application", existing = TRUE, force = TRUE)
+  Outlook <- COMCreate("Outlook.Application", existing = FALSE, force = TRUE, silent = TRUE)
 
   # Create a new message
   Email <- Outlook$CreateItem(0)

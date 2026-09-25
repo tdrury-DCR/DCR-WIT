@@ -47,7 +47,8 @@ ipak <- function(pkg) {
 packages <- c(
   "shiny", "shinyjs", "shinythemes", "readxl", "dplyr", "tidyr", "tidyverse", "odbc", "DBI", "lubridate",
   "DescTools", "devtools", "scales", "data.table", "magrittr", "stringr", "openxlsx", "V8", "installr", "data.table",
-  "dataRetrieval", "httpuv", "rlang", "shinycssloaders", "glue", "httr", "DT", "callr", "stringi", "RDCOMClient", "pool"
+  "dataRetrieval", "httpuv", "rlang", "shinycssloaders", "glue", "httr", "DT", "callr", "stringi", "RDCOMClient", "pool",
+  "datetimeutils"
 )
 
 # Load-Install Packages
@@ -495,7 +496,11 @@ server <- function(input, output, session) {
     if ("DateTimeET" %in% names(df.wq())) {
       min(as_date(df.wq()$DateTimeET), na.rm = TRUE)
     } else {
-      min(df.wq()$SampleDate, na.rm = TRUE)
+      if ("DateTimeET_Start" %in% names(df.wq())) {
+        min(as_date(df.wq()$DateTimeET_Start), na.rm = TRUE)
+      } else {
+        min(df.wq()$SampleDate, na.rm = TRUE)
+      }
     }
   })
 
@@ -504,7 +509,11 @@ server <- function(input, output, session) {
     if ("DateTimeET" %in% names(df.wq())) {
       max(as_date(df.wq()$DateTimeET), na.rm = TRUE)
     } else {
-      max(df.wq()$SampleDate, na.rm = TRUE)
+      if ("DateTimeET_Start" %in% names(df.wq())) {
+        max(as_date(df.wq()$DateTimeET_Start), na.rm = TRUE)
+      } else {
+        max(df.wq()$SampleDate, na.rm = TRUE)
+      }
     }
   })
 

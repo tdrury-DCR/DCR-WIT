@@ -3,9 +3,9 @@
 #  DESCRIPTION: This script will Format/Process Phytoplankton Data
 #  AUTHOR(S): Dan Crocker, Max Nyquist, Joy Trahan-Liptak
 #  DATE LAST UPDATED: 2023-03-20, BB
-#  GIT REPO: 
+#  GIT REPO:
 #  R version 4.0.3 (2020-10-10) x86_64
-##############################################################################.
+############################################################################## .
 
 # COMMENT OUT BELOW WHEN RUNNING FUNCTION IN SHINY
 
@@ -26,203 +26,209 @@
 
 # COMMENT OUT ABOVE CODE WHEN RUNNING IN SHINY!
 
-########################################################################.
+######################################################################## .
 ###                          PROCESS DATA                           ####
-########################################################################.
+######################################################################## .
 
-PROCESS_DATA <- function(file, rawdatafolder, filename.db, probe = NULL, ImportTable, ImportFlagTable = NULL){ # Start the function - takes 1 input (File)
+PROCESS_DATA <- function(file, rawdatafolder, filename.db, probe = NULL, ImportTable, ImportFlagTable = NULL) { # Start the function - takes 1 input (File)
 
-# Eliminate Scientific notation in numerical fields
-options(scipen = 999)
+  # Eliminate Scientific notation in numerical fields
+  options(scipen = 999)
 
-# Get the full path to the file
-path <- paste0(rawdatafolder,"/", file)
-# Assign the sheet number
-sheetNum <- as.numeric(length(excel_sheets(path)))
-# Assign the sheet name
-sheetName <- excel_sheets(path)[sheetNum]
-# Read in the raw data - defaults to the last sheet added
-df.wq <- read_excel(path, sheet = sheetNum, range = cell_cols("AN:BB"),  col_names = F, trim_ws = T, na = "nil") %>%
-                    as.data.frame()   # This is the raw data - data comes in as xlsx file, so read.csv will not work
+  # Get the full path to the file
+  path <- paste0(rawdatafolder, "/", file)
+  # Assign the sheet number
+  sheetNum <- as.numeric(length(excel_sheets(path)))
+  # Assign the sheet name
+  sheetName <- excel_sheets(path)[sheetNum]
+  # Read in the raw data - defaults to the last sheet added
+  df.wq <- read_excel(path, sheet = sheetNum, range = cell_cols("AN:BB"), col_names = F, trim_ws = T, na = "nil") %>%
+    as.data.frame() # This is the raw data - data comes in as xlsx file, so read.csv will not work
 
-# Scan row 9 (Effort) for values, then reduce vector where effort is 0 or NA - these are column #s we want to remove
-delcols <- as_vector(paste0(df.wq[9,]))
-delcols <- which(delcols == "0"|delcols == "NA")
+  # Scan row 9 (Effort) for values, then reduce vector where effort is 0 or NA - these are column #s we want to remove
+  delcols <- as_vector(paste0(df.wq[9, ]))
+  delcols <- which(delcols == "0" | delcols == "NA")
 
-# Remove unwanted columns, discard first 4 rows, filter out empty rows (NA inf column A), add a new row
+  # Remove unwanted columns, discard first 4 rows, filter out empty rows (NA inf column A), add a new row
 
-df.wq <- df.wq %>%
-  select(-delcols) %>%
-  slice(5:n()) 
+  df.wq <- df.wq %>%
+    select(-delcols) %>%
+    slice(5:n())
 
-names(df.wq) <- LETTERS[seq(from = 1, to = ncol(df.wq))]  
+  names(df.wq) <- LETTERS[seq(from = 1, to = ncol(df.wq))]
 
-df.wq <- df.wq %>%
-  dplyr::filter(!is.na(`A`)) %>%
-  add_row()
+  df.wq <- df.wq %>%
+    dplyr::filter(!is.na(`A`)) %>%
+    add_row()
 
-# Count how many depths were sampled this day
-cdepths <- (ncol(df.wq) - 1)/3
+  # Count how many depths were sampled this day
+  cdepths <- (ncol(df.wq) - 1) / 3
 
-# Specify which columns are for phytoplankton counts
-countcols <- 2:(cdepths + 1)
+  # Specify which columns are for phytoplankton counts
+  countcols <- 2:(cdepths + 1)
 
-# Specify which columns are for Presence-Absence
-#PAcols <- (ncol(df.wq) - cdepths +1):ncol(df.wq) #old
-PAcols <- (max(countcols) + 1):(max(countcols) + cdepths)
+  # Specify which columns are for Presence-Absence
+  # PAcols <- (ncol(df.wq) - cdepths +1):ncol(df.wq) #old
+  PAcols <- (max(countcols) + 1):(max(countcols) + cdepths)
 
-#Specify which columns are for Number of Fields Counted
-nFIELDcols <- (max(PAcols) + 1):(max(PAcols) + cdepths)
+  # Specify which columns are for Number of Fields Counted
+  nFIELDcols <- (max(PAcols) + 1):(max(PAcols) + cdepths)
 
-# Add information to the last row of data which holds the count vs PA specification in a new variable "DataType" (once transposed)
-df.wq[nrow(df.wq),1] <- "DataType"
-df.wq[nrow(df.wq),countcols] <- "count"
-df.wq[nrow(df.wq),PAcols] <- "PA"
-df.wq[nrow(df.wq),nFIELDcols] <- "nFields"
+  # Add information to the last row of data which holds the count vs PA specification in a new variable "DataType" (once transposed)
+  df.wq[nrow(df.wq), 1] <- "DataType"
+  df.wq[nrow(df.wq), countcols] <- "count"
+  df.wq[nrow(df.wq), PAcols] <- "PA"
+  df.wq[nrow(df.wq), nFIELDcols] <- "nFields"
 
-# Transpose the entire dataframe and convert back to Dataframe from Matrix
-df.wq <- as.data.frame(t(df.wq))
+  # Transpose the entire dataframe and convert back to Dataframe from Matrix
+  df.wq <- as.data.frame(t(df.wq))
 
-# Rename Columns using first row values and then remove the first row
-names(df.wq) <- unlist(df.wq[1,])
-df.wq <- df.wq[-1,]
+  # Rename Columns using first row values and then remove the first row
+  names(df.wq) <- unlist(df.wq[1, ])
+  df.wq <- df.wq[-1, ]
 
-# Gather data records into individual rows for each taxa, then spread the datatype back up into columns
-df.wq <- gather(df.wq,"taxa","count", 10:ncol(df.wq)-1, na.rm =T) %>%
-  spread(key = DataType, value = count)
+  # Gather data records into individual rows for each taxa, then spread the datatype back up into columns
+  df.wq <- gather(df.wq, "taxa", "count", 10:ncol(df.wq) - 1, na.rm = T) %>%
+    spread(key = DataType, value = count)
 
-# Data class/formats
-df.wq$Date <- as.numeric(as.character(df.wq$Date))
-df.wq$Date <- XLDateToPOSIXct(df.wq$Date)
-df.wq$count <- round(as.numeric(df.wq$count),3)
-df.wq$nFields <- as.numeric(df.wq$nFields)
+  # Data class/formats
+  df.wq$Date <- as.numeric(as.character(df.wq$Date))
+  df.wq$Date <- DescTools::XLDateToPOSIXct(df.wq$Date)
+  df.wq$count <- round(as.numeric(df.wq$count), 3)
+  df.wq$nFields <- as.numeric(df.wq$nFields)
 
-# Drop unused levels from factor variables
-df.wq[, 2:8] <- droplevels(df.wq[, 2:8])
+  # Drop unused levels from factor variables
+  df.wq[, 2:8] <- droplevels(df.wq[, 2:8])
 
-# Fix factor vars that should be numeric or integer
-df.wq$PA <- as.integer(df.wq$PA)
-df.wq$`Depth (m)` <- as.numeric(as.character(df.wq$`Depth (m)`))
-df.wq$Magnification <- as.integer(as.character(df.wq$Magnification))
+  # Fix factor vars that should be numeric or integer
+  df.wq$PA <- as.integer(df.wq$PA)
+  df.wq$`Depth (m)` <- as.numeric(as.character(df.wq$`Depth (m)`))
+  df.wq$Magnification <- as.integer(as.character(df.wq$Magnification))
 
-### Add new columns ####
+  ### Add new columns ####
 
-# Connect to db for queries below
-database <- "DCR_DWSP"
-dsn <- filename.db
-schema <- "Wachusett"
-tz <- 'America/New_York'
-con <- dbConnect(odbc::odbc(), dsn = dsn, uid = dsn, pwd = config[["DB Connection PW"]], timezone = tz)
-# 
-# Get Taxa Table and check to make sure taxa in df.wq are in the Taxa Table - if not warn and exit
-df_taxa_wach <- dbReadTable(con, Id(schema = schema, table = "tbl_PhytoTaxa"))
-unmatchedTaxa <- which(is.na(df_taxa_wach$ID[match(df.wq$taxa, df_taxa_wach$Phyto_Name)]))
+  # Connect to db for queries below
+  database <- "DCR_DWSP"
+  dsn <- filename.db
+  schema <- "Wachusett"
+  tz <- "America/New_York"
+  con <- dbConnect(odbc::odbc(), dsn = dsn, uid = dsn, pwd = config[["DB Connection PW"]], timezone = tz)
+  #
+  # Get Taxa Table and check to make sure taxa in df.wq are in the Taxa Table - if not warn and exit
+  df_taxa_wach <- dbReadTable(con, Id(schema = schema, table = "tbl_PhytoTaxa"))
+  unmatchedTaxa <- which(is.na(df_taxa_wach$ID[match(df.wq$taxa, df_taxa_wach$Phyto_Name)]))
 
-if (length(unmatchedTaxa) > 0){
-  # Exit function and send a warning to user
-  stop(paste("This data file contains", length(unmatchedTaxa),
-             "records with taxa that are not present in the Taxa Table -
+  if (length(unmatchedTaxa) > 0) {
+    # Exit function and send a warning to user
+    stop(paste(
+      "This data file contains", length(unmatchedTaxa),
+      "records with taxa that are not present in the Taxa Table -
              Please add new taxa to the Taxa Table or fix names prior to importing new records.",
-             "The taxa not in the Taxa Table are: ", paste(unique(df.wq[unmatchedTaxa, "taxa"]), collapse = ", ")), call. = FALSE)
-}
-# Unique ID number
-df.wq$UniqueID <- ""
-df.wq$UniqueID <- paste(df.wq$Location, df.wq$Date, df.wq$`Depth (m)`, df_taxa_wach$ID[match(df.wq$taxa, df_taxa_wach$Phyto_Name)], sep = "_")
-
-## Make sure it is unique within the data file - if not then exit function and send warning
-dupecheck <- which(duplicated(df.wq$UniqueID))
-dupes <- df.wq$UniqueID[dupecheck] # These are the dupes
-
-if (length(dupes) > 0){
-  # Exit function and send a warning to userlength(dupes) # number of dupes
-  stop(paste("This data file contains", length(dupes),
-             "records that appear to be duplicates. Eliminate all duplicates before proceeding.",
-             "The duplicate records include:", paste(head(dupes, 15), collapse = ", ")), call. = FALSE)
-}
-
-# Disconnect from db and remove connection obj
-dbDisconnect(con)
-rm(con)
-
-# Reconnect to database under the Quabbin schema to get Q data
-database <- "DCR_DWSP"
-dsn <- filename.db
-schema <- "Quabbin"
-tz <- 'America/New_York'
-con <- dbConnect(odbc::odbc(), dsn = dsn, uid = dsn, pwd = config[["DB Connection PW"]], timezone = tz)
-
-### Make sure records are not already in DB ####
-Uniq <- dbGetQuery(con, glue("SELECT [UniqueID], [ID] FROM [{schema}].[{ImportTable}]"))
-dupes2 <- Uniq[Uniq$UniqueID %in% df.wq$UniqueID,]
-
-if (nrow(dupes2) > 0){
-  # Exit function and send a warning to user
-  stop(paste("This data file contains", nrow(dupes2),
-             "records that appear to already exist in the database!
-             Eliminate all duplicates before proceeding.",
-             "The duplicate records include:", paste(head(dupes2$UniqueID, 15), collapse = ", ")), call. = FALSE)
-}
-rm(Uniq)
-
-### DataSource
-df.wq <- df.wq %>% mutate(DataSource = paste(file, sheetName, sep = "_"))
-
-### DataSourceID ####
-# Do some sorting first:
-df.wq <- df.wq[with(df.wq, order(Date, taxa, `Depth (m)`)),]
-
-# Assign the numbers
-df.wq$DataSourceID <- seq(1, nrow(df.wq), 1)
-
-### Importdate (Date)
-df.wq$ImportDate <- Sys.Date() %>% as.Date()
-
-### IDs
-
-# Read Tables
-# WQ
-setIDs <- function(){
-  query.wq <- dbGetQuery(con, glue("SELECT max(ID) FROM [{schema}].[{ImportTable}]"))
-  # Get current max ID
-  if(is.na(query.wq)) {
-    query.wq <- 0
-  } else {
-    query.wq <- query.wq
+      "The taxa not in the Taxa Table are: ", paste(unique(df.wq[unmatchedTaxa, "taxa"]), collapse = ", ")
+    ), call. = FALSE)
   }
-  ID.max.wq <- as.numeric(unlist(query.wq))
-  rm(query.wq)
+  # Unique ID number
+  df.wq$UniqueID <- ""
+  df.wq$UniqueID <- paste(df.wq$Location, df.wq$Date, df.wq$`Depth (m)`, df_taxa_wach$ID[match(df.wq$taxa, df_taxa_wach$Phyto_Name)], sep = "_")
 
-  ### ID wq
-  df.wq$ID <- seq.int(nrow(df.wq)) + ID.max.wq
-}
-df.wq$ID <- setIDs()
+  ## Make sure it is unique within the data file - if not then exit function and send warning
+  dupecheck <- which(duplicated(df.wq$UniqueID))
+  dupes <- df.wq$UniqueID[dupecheck] # These are the dupes
 
-#df.wq <- df.wq[, c(16, 1:11, 15, 13, 14, 12)]
-df.wq <- df.wq[, c(17, 1:10, 12, 16, 14:15, 13, 11)]
+  if (length(dupes) > 0) {
+    # Exit function and send a warning to userlength(dupes) # number of dupes
+    stop(paste(
+      "This data file contains", length(dupes),
+      "records that appear to be duplicates. Eliminate all duplicates before proceeding.",
+      "The duplicate records include:", paste(head(dupes, 15), collapse = ", ")
+    ), call. = FALSE)
+  }
 
-# Reorder remaining columns to match the database table exactly
-cnames <- dbListFields(con, schema = schema, ImportTable)
-names(df.wq) <- cnames
+  # Disconnect from db and remove connection obj
+  dbDisconnect(con)
+  rm(con)
 
-# change variable types to match database
-df.wq$ID <- as.integer(df.wq$ID)
-df.wq$DataSourceID <- as.integer(df.wq$DataSourceID)
-df.wq$SampleDate <- as.Date(df.wq$SampleDate)
+  # Reconnect to database under the Quabbin schema to get Q data
+  database <- "DCR_DWSP"
+  dsn <- filename.db
+  schema <- "Quabbin"
+  tz <- "America/New_York"
+  con <- dbConnect(odbc::odbc(), dsn = dsn, uid = dsn, pwd = config[["DB Connection PW"]], timezone = tz)
 
-# Create a list of the processed datasets
-dfs <- list()
-dfs[[1]] <- df.wq
-dfs[[2]] <- path
-dfs[[3]] <- NULL # Removed condition to test for flags and put it in the setFlagIDS() function
+  ### Make sure records are not already in DB ####
+  Uniq <- dbGetQuery(con, glue("SELECT [UniqueID], [ID] FROM [{schema}].[{ImportTable}]"))
+  dupes2 <- Uniq[Uniq$UniqueID %in% df.wq$UniqueID, ]
 
-# Disconnect from db and remove connection obj
-dbDisconnect(con)
-rm(con)
-return(dfs)
+  if (nrow(dupes2) > 0) {
+    # Exit function and send a warning to user
+    stop(paste(
+      "This data file contains", nrow(dupes2),
+      "records that appear to already exist in the database!
+             Eliminate all duplicates before proceeding.",
+      "The duplicate records include:", paste(head(dupes2$UniqueID, 15), collapse = ", ")
+    ), call. = FALSE)
+  }
+  rm(Uniq)
+
+  ### DataSource
+  df.wq <- df.wq %>% mutate(DataSource = paste(file, sheetName, sep = "_"))
+
+  ### DataSourceID ####
+  # Do some sorting first:
+  df.wq <- df.wq[with(df.wq, order(Date, taxa, `Depth (m)`)), ]
+
+  # Assign the numbers
+  df.wq$DataSourceID <- seq(1, nrow(df.wq), 1)
+
+  ### Importdate (Date)
+  df.wq$ImportDate <- Sys.Date() %>% as.Date()
+
+  ### IDs
+
+  # Read Tables
+  # WQ
+  setIDs <- function() {
+    query.wq <- dbGetQuery(con, glue("SELECT max(ID) FROM [{schema}].[{ImportTable}]"))
+    # Get current max ID
+    if (is.na(query.wq)) {
+      query.wq <- 0
+    } else {
+      query.wq <- query.wq
+    }
+    ID.max.wq <- as.numeric(unlist(query.wq))
+    rm(query.wq)
+
+    ### ID wq
+    df.wq$ID <- seq.int(nrow(df.wq)) + ID.max.wq
+  }
+  df.wq$ID <- setIDs()
+
+  # df.wq <- df.wq[, c(16, 1:11, 15, 13, 14, 12)]
+  df.wq <- df.wq[, c(17, 1:10, 12, 16, 14:15, 13, 11)]
+
+  # Reorder remaining columns to match the database table exactly
+  cnames <- dbListFields(con, schema = schema, ImportTable)
+  names(df.wq) <- cnames
+
+  # change variable types to match database
+  df.wq$ID <- as.integer(df.wq$ID)
+  df.wq$DataSourceID <- as.integer(df.wq$DataSourceID)
+  df.wq$SampleDate <- as.Date(df.wq$SampleDate)
+
+  # Create a list of the processed datasets
+  dfs <- list()
+  dfs[[1]] <- df.wq
+  dfs[[2]] <- path
+  dfs[[3]] <- NULL # Removed condition to test for flags and put it in the setFlagIDS() function
+
+  # Disconnect from db and remove connection obj
+  dbDisconnect(con)
+  rm(con)
+  return(dfs)
 } # END FUNCTION ####
 
 #### COMMENT OUT SECTION BELOW WHEN RUNNING SHINY
-########################################################################################################.
+######################################################################################################## .
 # # #RUN THE FUNCTION TO PROCESS THE DATA AND RETURN 2 DATAFRAMES and path AS LIST:
 # dfs <- PROCESS_DATA(file, rawdatafolder, filename.db, ImportTable = ImportTable, ImportFlagTable = NULL )
 # # #
@@ -232,24 +238,24 @@ return(dfs)
 # # df.flags  <- dfs[[3]]
 
 
-########################################################################.
+######################################################################## .
 ###                       Write data to Database                    ####
-########################################################################.
+######################################################################## .
 
-IMPORT_DATA <- function(df.wq, df.flags = NULL, path, file, filename.db, processedfolder, ImportTable, ImportFlagTable = NULL){
+IMPORT_DATA <- function(df.wq, df.flags = NULL, path, file, filename.db, processedfolder, ImportTable, ImportFlagTable = NULL) {
   # df.flags is an optional argument  - not used for this dataset
 
   # Establish db connection
   dsn <- filename.db
-  schema <- 'Quabbin'
-  tz <- 'America/New_York'
+  schema <- "Quabbin"
+  tz <- "America/New_York"
   pool <- dbPool(odbc::odbc(), dsn = dsn, uid = dsn, pwd = config[["DB Connection PW"]], timezone = tz)
-  
+
   # Import the data to the database
   poolWithTransaction(pool, function(conn) {
-    pool::dbWriteTable(pool, DBI::Id(schema = schema, table = ImportTable),value = df.wq, append = TRUE, row.names = FALSE)
+    pool::dbWriteTable(pool, DBI::Id(schema = schema, table = ImportTable), value = df.wq, append = TRUE, row.names = FALSE)
   })
-  
+
   #* Close the database pool ----
   poolClose(pool)
   rm(pool)
@@ -257,10 +263,6 @@ IMPORT_DATA <- function(df.wq, df.flags = NULL, path, file, filename.db, process
   return("Import Successful")
 }
 ### END
-# 
+#
 # IMPORT_DATA(df.wq = df.wq, df.flags = NULL, path, file, filename.db, processedfolder = NULL,
 #             ImportTable = ImportTable, ImportFlagTable = NULL)
-
-
-
-

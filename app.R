@@ -48,7 +48,7 @@ packages <- c(
   "shiny", "shinyjs", "shinythemes", "readxl", "dplyr", "tidyr", "tidyverse", "odbc", "DBI", "lubridate",
   "DescTools", "devtools", "scales", "data.table", "magrittr", "stringr", "openxlsx", "V8", "installr", "data.table",
   "dataRetrieval", "httpuv", "rlang", "shinycssloaders", "glue", "httr", "DT", "callr", "stringi", "RDCOMClient", "pool",
-  "datetimeutils"
+  "datetimeutils", "mvtnorm"
 )
 
 # Load-Install Packages

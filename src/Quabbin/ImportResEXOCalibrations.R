@@ -17,7 +17,7 @@
 # library(readxl)
 # library(DescTools)
 # library(glue)
-#
+
 # # COMMENT OUT ABOVE CODE WHEN RUNNING IN SHINY!
 
 ######################################################################## .
@@ -45,6 +45,11 @@ PROCESS_DATA <- function(file, rawdatafolder, filename.db, probe = NULL, ImportT
   # Create a working copy of raw data
   df <- df_raw
 
+  # Replace all micro symbols with u
+  colnames(df) <- colnames(df) %>% gsub("µ", "u", .)
+  df_cols <- colnames(df)
+  df <- as.data.frame(lapply(df, function(y) gsub("µ", "u", y)))
+  colnames(df) <- df_cols
   # Call out specific parameters into their own df
   ## Dissolved Oxygen ####
   DO <- subset(df[1:43, 1:2])
@@ -118,6 +123,9 @@ PROCESS_DATA <- function(file, rawdatafolder, filename.db, probe = NULL, ImportT
   DO <- DO %>%
     filter(cal_point != "")
 
+  # Filter out blank rows
+  DO <- DO %>% filter(!is.na(postcal_value))
+
 
   ## Specific Conductivity ####
   cond <- subset(df[1:43, 3:4])
@@ -185,11 +193,14 @@ PROCESS_DATA <- function(file, rawdatafolder, filename.db, probe = NULL, ImportT
   cond <- cond %>%
     filter(cal_point != "")
 
+  # Filter out blank rows
+  cond <- cond %>% filter(!is.na(postcal_value))
+
 
   ## Chlorophyll-A (ug/L) ####
   chlA <- subset(df[1:43, 5:6])
   chlA <- chlA %>%
-    filter(`chlA(µg/L)` != "")
+    filter(`chlA(ug/L)` != "")
   chlA$parameter <- c("Chlorophyll-A (ug/L)")
   chlA$datetime_start <- c(chlA[2, 2])
   chlA$datetime_end <- c(chlA[3, 2])
@@ -202,8 +213,8 @@ PROCESS_DATA <- function(file, rawdatafolder, filename.db, probe = NULL, ImportT
 
   ## add in other columns - mutate to separate values from units, then transform values to numeric class
   # starts getting messy with multiple cal points
-  chlA$cal_point <- with(chlA, ifelse(`chlA(µg/L)` == "[Cal Point 1]", "Point 1",
-    ifelse(`chlA(µg/L)` == "[Cal Point 2]", "Point 2", "")
+  chlA$cal_point <- with(chlA, ifelse(`chlA(ug/L)` == "[Cal Point 1]", "Point 1",
+    ifelse(`chlA(ug/L)` == "[Cal Point 2]", "Point 2", "")
   ))
 
 
@@ -273,11 +284,14 @@ PROCESS_DATA <- function(file, rawdatafolder, filename.db, probe = NULL, ImportT
   chlA <- chlA %>%
     filter(cal_point != "")
 
+  # Filter out blank rows
+  chlA <- chlA %>% filter(!is.na(postcal_value))
+
 
   ## Phycocyanin (ug/L) ####
   phyco <- subset(df[1:43, 7:8])
   phyco <- phyco %>%
-    filter(`phyco(µg/L)` != "")
+    filter(`phyco(ug/L)` != "")
   phyco$parameter <- c("Phycocyanin (ug/L)")
   phyco$datetime_start <- c(phyco[2, 2])
   phyco$datetime_end <- c(phyco[3, 2])
@@ -290,8 +304,8 @@ PROCESS_DATA <- function(file, rawdatafolder, filename.db, probe = NULL, ImportT
 
   ## add in other columns - mutate to separate values from units, then transform values to numeric class
   # starts getting messy with multiple cal points
-  phyco$cal_point <- with(phyco, ifelse(`phyco(µg/L)` == "[Cal Point 1]", "Point 1",
-    ifelse(`phyco(µg/L)` == "[Cal Point 2]", "Point 2", "")
+  phyco$cal_point <- with(phyco, ifelse(`phyco(ug/L)` == "[Cal Point 1]", "Point 1",
+    ifelse(`phyco(ug/L)` == "[Cal Point 2]", "Point 2", "")
   ))
 
 
@@ -359,6 +373,9 @@ PROCESS_DATA <- function(file, rawdatafolder, filename.db, probe = NULL, ImportT
   phyco <- unique(phyco)
   phyco <- phyco %>%
     filter(cal_point != "")
+
+  # Filter out blank rows
+  phyco <- phyco %>% filter(!is.na(postcal_value))
 
 
   ## Phycocyanin (RFU) ####
@@ -448,6 +465,9 @@ PROCESS_DATA <- function(file, rawdatafolder, filename.db, probe = NULL, ImportT
   phyco_RFU <- phyco_RFU %>%
     filter(cal_point != "")
 
+  # Filter out blank rows
+  phyco_RFU <- phyco_RFU %>% filter(!is.na(postcal_value))
+
 
   ## Chlorophyll-A (RFU) ####
   chlA_RFU <- subset(df[1:43, 11:12])
@@ -536,6 +556,8 @@ PROCESS_DATA <- function(file, rawdatafolder, filename.db, probe = NULL, ImportT
   chlA_RFU <- chlA_RFU %>%
     filter(cal_point != "")
 
+  # Filter out blank rows
+  chlA_RFU <- chlA_RFU %>% filter(!is.na(postcal_value))
 
   ## Turbidity (NTU/FNU) ####
   turb <- subset(df[1:43, 13:14])
@@ -624,6 +646,8 @@ PROCESS_DATA <- function(file, rawdatafolder, filename.db, probe = NULL, ImportT
   turb <- turb %>%
     filter(cal_point != "")
 
+  # Filter out blank rows
+  turb <- turb %>% filter(!is.na(postcal_value))
 
   ## pH ####
   pH_df <- subset(df[1:43, 15:16])
@@ -726,6 +750,8 @@ PROCESS_DATA <- function(file, rawdatafolder, filename.db, probe = NULL, ImportT
   pH_df <- pH_df %>%
     filter(cal_point != "")
 
+  # Filter out blank rows
+  pH_df <- pH_df %>% filter(!is.na(postcal_value))
 
   ######## COMBINE DATAFRAMES ########
   dfs <- list(DO, cond, chlA, phyco, phyco_RFU, chlA_RFU, turb, pH_df)

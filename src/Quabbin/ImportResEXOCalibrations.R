@@ -46,9 +46,9 @@ PROCESS_DATA <- function(file, rawdatafolder, filename.db, probe = NULL, ImportT
   df <- df_raw
 
   # Replace all micro symbols with u
-  colnames(df) <- colnames(df) %>% gsub("µ", "u", .)
+  colnames(df) <- colnames(df) %>% gsub("\U00B5", "u", .)
   df_cols <- colnames(df)
-  df <- as.data.frame(lapply(df, function(y) gsub("µ", "u", y)))
+  df <- as.data.frame(lapply(df, function(y) gsub("\U00B5", "u", y)))
   colnames(df) <- df_cols
   # Call out specific parameters into their own df
   ## Dissolved Oxygen ####
@@ -855,7 +855,7 @@ PROCESS_DATA <- function(file, rawdatafolder, filename.db, probe = NULL, ImportT
     mutate(ID = as.integer(ID)) %>%
     mutate(across(
       .cols = everything(),
-      ~ str_replace(., "µ", "u")
+      ~ str_replace(., "\U00B5", "u")
     ))
 
 

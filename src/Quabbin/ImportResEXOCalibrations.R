@@ -71,37 +71,37 @@ PROCESS_DATA <- function(file, rawdatafolder, filename.db, probe = NULL, ImportT
   DO$standard <- c(DO[20, 2])
   DO <- DO %>% dplyr::mutate(standard_unit = str_extract_all(standard, "\\%\\s[:upper:][:lower:][:lower:]"))
   DO$standard_unit <- as.character(DO$standard_unit)
-  DO <- DO %>% dplyr::mutate(standard = str_extract_all(standard, "[:digit:]+\\.[:digit:]+"))
+  DO <- DO %>% dplyr::mutate(standard = str_extract_all(standard, "-?[:digit:]+\\.[:digit:]+"))
   DO$standard <- as.numeric(DO$standard)
 
   DO$precal_value <- c(DO[21, 2])
   DO <- DO %>% dplyr::mutate(precal_unit = str_extract_all(precal_value, "\\%\\s[:upper:][:lower:][:lower:]"))
   DO$precal_unit <- as.character(DO$precal_unit)
-  DO <- DO %>% dplyr::mutate(precal_value = str_extract_all(precal_value, "[:digit:]+\\.[:digit:]+"))
+  DO <- DO %>% dplyr::mutate(precal_value = str_extract_all(precal_value, "-?[:digit:]+\\.[:digit:]+"))
   DO$precal_value <- as.numeric(DO$precal_value)
 
   DO$postcal_value <- c(DO[22, 2])
   DO <- DO %>% dplyr::mutate(postcal_unit = str_extract_all(postcal_value, "\\%\\s[:upper:][:lower:][:lower:]"))
   DO$postcal_unit <- as.character(DO$postcal_unit)
-  DO <- DO %>% dplyr::mutate(postcal_value = str_extract_all(postcal_value, "[:digit:]+\\.[:digit:]+"))
+  DO <- DO %>% dplyr::mutate(postcal_value = str_extract_all(postcal_value, "-?[:digit:]+\\.[:digit:]+"))
   DO$postcal_value <- as.numeric(DO$postcal_value)
 
   DO$raw_value <- c(DO[23, 2])
   DO <- DO %>% dplyr::mutate(raw_value_unit = str_extract_all(raw_value, "\\%\\s[:upper:][:lower:][:lower:]"))
   DO$raw_value_unit <- as.character(DO$raw_value_unit)
-  DO <- DO %>% dplyr::mutate(raw_value = str_extract_all(raw_value, "[:digit:]+\\.[:digit:]+"))
+  DO <- DO %>% dplyr::mutate(raw_value = str_extract_all(raw_value, "-?[:digit:]+\\.[:digit:]+"))
   DO$raw_value <- as.numeric(DO$raw_value)
 
   DO$temp <- c(DO[24, 2])
   DO <- DO %>% dplyr::mutate(temp_unit = str_extract_all(temp, "[:upper:]"))
   DO$temp_unit <- as.character(DO$temp_unit)
-  DO <- DO %>% dplyr::mutate(temp = str_extract_all(temp, "[:digit:]+\\.[:digit:]+"))
+  DO <- DO %>% dplyr::mutate(temp = str_extract_all(temp, "-?[:digit:]+\\.[:digit:]+"))
   DO$temp <- as.numeric(DO$temp)
 
   DO$barometer <- c(DO[26, 2]) # handheld cals do NOT record this, gives out NA - is this an issue? *****
   DO <- DO %>% dplyr::mutate(barometer_unit = str_extract_all(barometer, "[:lower:][:lower:][:upper:][:lower:]"))
   DO$barometer_unit <- as.character(DO$barometer_unit)
-  DO <- DO %>% dplyr::mutate(barometer = str_extract_all(barometer, "[:digit:]+\\.[:digit:]+"))
+  DO <- DO %>% dplyr::mutate(barometer = str_extract_all(barometer, "-?[:digit:]+\\.[:digit:]+"))
   DO$barometer <- as.numeric(DO$barometer)
 
   DO$stability <- as.character(c(DO[25, 2]))
@@ -147,31 +147,31 @@ PROCESS_DATA <- function(file, rawdatafolder, filename.db, probe = NULL, ImportT
   cond$standard <- c(cond[17, 2])
   cond <- cond %>% dplyr::mutate(standard_unit = str_extract_all(standard, "[:space:].[:upper:]\\/[:lower:][:lower:]"))
   cond$standard_unit <- as.character(cond$standard_unit)
-  cond <- cond %>% dplyr::mutate(standard = str_extract_all(standard, "[:digit:]+\\.[:digit:]+"))
+  cond <- cond %>% dplyr::mutate(standard = str_extract_all(standard, "-?[:digit:]+\\.[:digit:]+"))
   cond$standard <- as.numeric(cond$standard)
 
   cond$precal_value <- c(cond[18, 2])
   cond <- cond %>% dplyr::mutate(precal_unit = str_extract_all(precal_value, "[:space:].[:upper:]\\/[:lower:][:lower:]"))
   cond$precal_unit <- as.character(cond$precal_unit)
-  cond <- cond %>% dplyr::mutate(precal_value = str_extract_all(precal_value, "[:digit:]+\\.[:digit:]+"))
+  cond <- cond %>% dplyr::mutate(precal_value = str_extract_all(precal_value, "-?[:digit:]+\\.[:digit:]+"))
   cond$precal_value <- as.numeric(cond$precal_value)
 
   cond$postcal_value <- c(cond[19, 2])
   cond <- cond %>% dplyr::mutate(postcal_unit = str_extract_all(postcal_value, "[:space:].[:upper:]\\/[:lower:][:lower:]"))
   cond$postcal_unit <- as.character(cond$postcal_unit)
-  cond <- cond %>% dplyr::mutate(postcal_value = str_extract_all(postcal_value, "[:digit:]+\\.[:digit:]+"))
+  cond <- cond %>% dplyr::mutate(postcal_value = str_extract_all(postcal_value, "-?[:digit:]+\\.[:digit:]+"))
   cond$postcal_value <- as.numeric(cond$postcal_value)
 
   cond$raw_value <- c(cond[20, 2])
   cond <- cond %>% dplyr::mutate(raw_value_unit = str_extract_all(raw_value, "[:space:].[:upper:]\\/[:lower:][:lower:]"))
   cond$raw_value_unit <- as.character(cond$raw_value_unit)
-  cond <- cond %>% dplyr::mutate(raw_value = str_extract_all(raw_value, "[:digit:]+\\.[:digit:]+"))
+  cond <- cond %>% dplyr::mutate(raw_value = str_extract_all(raw_value, "-?[:digit:]+\\.[:digit:]+"))
   cond$raw_value <- as.numeric(cond$raw_value)
 
   cond$temp <- c(cond[21, 2])
   cond <- cond %>% dplyr::mutate(temp_unit = str_extract_all(temp, "[:upper:]"))
   cond$temp_unit <- as.character(cond$temp_unit)
-  cond <- cond %>% dplyr::mutate(temp = str_extract_all(temp, "[:digit:]+\\.[:digit:]+"))
+  cond <- cond %>% dplyr::mutate(temp = str_extract_all(temp, "-?[:digit:]+\\.[:digit:]+"))
   cond$temp <- as.numeric(cond$temp)
 
   cond$stability <- as.character(c(cond[22, 2]))
@@ -223,7 +223,7 @@ PROCESS_DATA <- function(file, rawdatafolder, filename.db, probe = NULL, ImportT
   ))
   chlA <- chlA %>% dplyr::mutate(standard_unit = str_extract_all(standard, "[:space:].[:lower:]\\/[:upper:]"))
   chlA$standard_unit <- as.character(chlA$standard_unit)
-  chlA <- chlA %>% dplyr::mutate(standard = str_extract_all(standard, "[:digit:]+\\.[:digit:]+"))
+  chlA <- chlA %>% dplyr::mutate(standard = str_extract_all(standard, "-?[:digit:]+\\.[:digit:]+"))
   chlA$standard <- as.numeric(chlA$standard)
 
 
@@ -232,7 +232,7 @@ PROCESS_DATA <- function(file, rawdatafolder, filename.db, probe = NULL, ImportT
   ))
   chlA <- chlA %>% dplyr::mutate(precal_unit = str_extract_all(precal_value, "[:space:].[:lower:]\\/[:upper:]"))
   chlA$precal_unit <- as.character(chlA$precal_unit)
-  chlA <- chlA %>% dplyr::mutate(precal_value = str_extract_all(precal_value, "[:digit:]+\\.[:digit:]+"))
+  chlA <- chlA %>% dplyr::mutate(precal_value = str_extract_all(precal_value, "-?[:digit:]+\\.[:digit:]+"))
   chlA$precal_value <- as.numeric(chlA$precal_value)
 
 
@@ -241,7 +241,7 @@ PROCESS_DATA <- function(file, rawdatafolder, filename.db, probe = NULL, ImportT
   ))
   chlA <- chlA %>% dplyr::mutate(postcal_unit = str_extract_all(postcal_value, "[:space:].[:lower:]\\/[:upper:]"))
   chlA$postcal_unit <- as.character(chlA$postcal_unit)
-  chlA <- chlA %>% dplyr::mutate(postcal_value = str_extract_all(postcal_value, "[:digit:]+\\.[:digit:]+"))
+  chlA <- chlA %>% dplyr::mutate(postcal_value = str_extract_all(postcal_value, "-?[:digit:]+\\.[:digit:]+"))
   chlA$postcal_value <- as.numeric(chlA$postcal_value)
 
 
@@ -250,7 +250,7 @@ PROCESS_DATA <- function(file, rawdatafolder, filename.db, probe = NULL, ImportT
   ))
   chlA <- chlA %>% dplyr::mutate(raw_value_unit = str_extract_all(raw_value, "[:space:].[:lower:]\\/[:upper:]"))
   chlA$raw_value_unit <- as.character(chlA$raw_value_unit)
-  chlA <- chlA %>% dplyr::mutate(raw_value = str_extract_all(raw_value, "[:digit:]+\\.[:digit:]+"))
+  chlA <- chlA %>% dplyr::mutate(raw_value = str_extract_all(raw_value, "-?[:digit:]+\\.[:digit:]+"))
   chlA$raw_value <- as.numeric(chlA$raw_value)
 
 
@@ -259,7 +259,7 @@ PROCESS_DATA <- function(file, rawdatafolder, filename.db, probe = NULL, ImportT
   ))
   chlA <- chlA %>% dplyr::mutate(temp_unit = str_extract_all(temp, "[:upper:]"))
   chlA$temp_unit <- as.character(chlA$temp_unit)
-  chlA <- chlA %>% dplyr::mutate(temp = str_extract_all(temp, "[:digit:]+\\.[:digit:]+"))
+  chlA <- chlA %>% dplyr::mutate(temp = str_extract_all(temp, "-?[:digit:]+\\.[:digit:]+"))
   chlA$temp <- as.numeric(chlA$temp)
 
 
@@ -314,7 +314,7 @@ PROCESS_DATA <- function(file, rawdatafolder, filename.db, probe = NULL, ImportT
   ))
   phyco <- phyco %>% dplyr::mutate(standard_unit = str_extract_all(standard, "[:space:].[:lower:]\\/[:upper:]"))
   phyco$standard_unit <- as.character(phyco$standard_unit)
-  phyco <- phyco %>% dplyr::mutate(standard = str_extract_all(standard, "[:digit:]+\\.[:digit:]+"))
+  phyco <- phyco %>% dplyr::mutate(standard = str_extract_all(standard, "-?[:digit:]+\\.[:digit:]+"))
   phyco$standard <- as.numeric(phyco$standard)
 
 
@@ -323,7 +323,7 @@ PROCESS_DATA <- function(file, rawdatafolder, filename.db, probe = NULL, ImportT
   ))
   phyco <- phyco %>% dplyr::mutate(precal_unit = str_extract_all(precal_value, "[:space:].[:lower:]\\/[:upper:]"))
   phyco$precal_unit <- as.character(phyco$precal_unit)
-  phyco <- phyco %>% dplyr::mutate(precal_value = str_extract_all(precal_value, "[:digit:]+\\.[:digit:]+"))
+  phyco <- phyco %>% dplyr::mutate(precal_value = str_extract_all(precal_value, "-?[:digit:]+\\.[:digit:]+"))
   phyco$precal_value <- as.numeric(phyco$precal_value)
 
 
@@ -332,7 +332,7 @@ PROCESS_DATA <- function(file, rawdatafolder, filename.db, probe = NULL, ImportT
   ))
   phyco <- phyco %>% dplyr::mutate(postcal_unit = str_extract_all(postcal_value, "[:space:].[:lower:]\\/[:upper:]"))
   phyco$postcal_unit <- as.character(phyco$postcal_unit)
-  phyco <- phyco %>% dplyr::mutate(postcal_value = str_extract_all(postcal_value, "[:digit:]+\\.[:digit:]+"))
+  phyco <- phyco %>% dplyr::mutate(postcal_value = str_extract_all(postcal_value, "-?[:digit:]+\\.[:digit:]+"))
   phyco$postcal_value <- as.numeric(phyco$postcal_value)
 
 
@@ -341,7 +341,7 @@ PROCESS_DATA <- function(file, rawdatafolder, filename.db, probe = NULL, ImportT
   ))
   phyco <- phyco %>% dplyr::mutate(raw_value_unit = str_extract_all(raw_value, "[:space:].[:lower:]\\/[:upper:]"))
   phyco$raw_value_unit <- as.character(phyco$raw_value_unit)
-  phyco <- phyco %>% dplyr::mutate(raw_value = str_extract_all(raw_value, "[:digit:]+\\.[:digit:]+"))
+  phyco <- phyco %>% dplyr::mutate(raw_value = str_extract_all(raw_value, "-?[:digit:]+\\.[:digit:]+"))
   phyco$raw_value <- as.numeric(phyco$raw_value)
 
 
@@ -350,7 +350,7 @@ PROCESS_DATA <- function(file, rawdatafolder, filename.db, probe = NULL, ImportT
   ))
   phyco <- phyco %>% dplyr::mutate(temp_unit = str_extract_all(temp, "[:upper:]"))
   phyco$temp_unit <- as.character(phyco$temp_unit)
-  phyco <- phyco %>% dplyr::mutate(temp = str_extract_all(temp, "[:digit:]+\\.[:digit:]+"))
+  phyco <- phyco %>% dplyr::mutate(temp = str_extract_all(temp, "-?[:digit:]+\\.[:digit:]+"))
   phyco$temp <- as.numeric(phyco$temp)
 
 
@@ -404,7 +404,7 @@ PROCESS_DATA <- function(file, rawdatafolder, filename.db, probe = NULL, ImportT
   ))
   phyco_RFU <- phyco_RFU %>% dplyr::mutate(standard_unit = str_extract_all(standard, "[:upper:][:upper:][:upper:]"))
   phyco_RFU$standard_unit <- as.character(phyco_RFU$standard_unit)
-  phyco_RFU <- phyco_RFU %>% dplyr::mutate(standard = str_extract_all(standard, "[:digit:]+\\.[:digit:]+"))
+  phyco_RFU <- phyco_RFU %>% dplyr::mutate(standard = str_extract_all(standard, "-?[:digit:]+\\.[:digit:]+"))
   phyco_RFU$standard <- as.numeric(phyco_RFU$standard)
 
 
@@ -413,7 +413,7 @@ PROCESS_DATA <- function(file, rawdatafolder, filename.db, probe = NULL, ImportT
   ))
   phyco_RFU <- phyco_RFU %>% dplyr::mutate(precal_unit = str_extract_all(precal_value, "[:upper:][:upper:][:upper:]"))
   phyco_RFU$precal_unit <- as.character(phyco_RFU$precal_unit)
-  phyco_RFU <- phyco_RFU %>% dplyr::mutate(precal_value = str_extract_all(precal_value, "[:digit:]+\\.[:digit:]+"))
+  phyco_RFU <- phyco_RFU %>% dplyr::mutate(precal_value = str_extract_all(precal_value, "-?[:digit:]+\\.[:digit:]+"))
   phyco_RFU$precal_value <- as.numeric(phyco_RFU$precal_value)
 
 
@@ -422,7 +422,7 @@ PROCESS_DATA <- function(file, rawdatafolder, filename.db, probe = NULL, ImportT
   ))
   phyco_RFU <- phyco_RFU %>% dplyr::mutate(postcal_unit = str_extract_all(postcal_value, "[:upper:][:upper:][:upper:]"))
   phyco_RFU$postcal_unit <- as.character(phyco_RFU$postcal_unit)
-  phyco_RFU <- phyco_RFU %>% dplyr::mutate(postcal_value = str_extract_all(postcal_value, "[:digit:]+\\.[:digit:]+"))
+  phyco_RFU <- phyco_RFU %>% dplyr::mutate(postcal_value = str_extract_all(postcal_value, "-?[:digit:]+\\.[:digit:]+"))
   phyco_RFU$postcal_value <- as.numeric(phyco_RFU$postcal_value)
 
 
@@ -431,7 +431,7 @@ PROCESS_DATA <- function(file, rawdatafolder, filename.db, probe = NULL, ImportT
   ))
   phyco_RFU <- phyco_RFU %>% dplyr::mutate(raw_value_unit = str_extract_all(raw_value, "[:upper:][:upper:][:upper:]"))
   phyco_RFU$raw_value_unit <- as.character(phyco_RFU$raw_value_unit)
-  phyco_RFU <- phyco_RFU %>% dplyr::mutate(raw_value = str_extract_all(raw_value, "[:digit:]+\\.[:digit:]+"))
+  phyco_RFU <- phyco_RFU %>% dplyr::mutate(raw_value = str_extract_all(raw_value, "-?[:digit:]+\\.[:digit:]+"))
   phyco_RFU$raw_value <- as.numeric(phyco_RFU$raw_value)
 
 
@@ -440,7 +440,7 @@ PROCESS_DATA <- function(file, rawdatafolder, filename.db, probe = NULL, ImportT
   ))
   phyco_RFU <- phyco_RFU %>% dplyr::mutate(temp_unit = str_extract_all(temp, "[:upper:]"))
   phyco_RFU$temp_unit <- as.character(phyco_RFU$temp_unit)
-  phyco_RFU <- phyco_RFU %>% dplyr::mutate(temp = str_extract_all(temp, "[:digit:]+\\.[:digit:]+"))
+  phyco_RFU <- phyco_RFU %>% dplyr::mutate(temp = str_extract_all(temp, "-?[:digit:]+\\.[:digit:]+"))
   phyco_RFU$temp <- as.numeric(phyco_RFU$temp)
 
 
@@ -495,7 +495,7 @@ PROCESS_DATA <- function(file, rawdatafolder, filename.db, probe = NULL, ImportT
   ))
   chlA_RFU <- chlA_RFU %>% dplyr::mutate(standard_unit = str_extract_all(standard, "[:upper:][:upper:][:upper:]"))
   chlA_RFU$standard_unit <- as.character(chlA_RFU$standard_unit)
-  chlA_RFU <- chlA_RFU %>% dplyr::mutate(standard = str_extract_all(standard, "[:digit:]+\\.[:digit:]+"))
+  chlA_RFU <- chlA_RFU %>% dplyr::mutate(standard = str_extract_all(standard, "-?[:digit:]+\\.[:digit:]+"))
   chlA_RFU$standard <- as.numeric(chlA_RFU$standard)
 
 
@@ -504,7 +504,7 @@ PROCESS_DATA <- function(file, rawdatafolder, filename.db, probe = NULL, ImportT
   ))
   chlA_RFU <- chlA_RFU %>% dplyr::mutate(precal_unit = str_extract_all(precal_value, "[:upper:][:upper:][:upper:]"))
   chlA_RFU$precal_unit <- as.character(chlA_RFU$precal_unit)
-  chlA_RFU <- chlA_RFU %>% dplyr::mutate(precal_value = str_extract_all(precal_value, "[:digit:]+\\.[:digit:]+"))
+  chlA_RFU <- chlA_RFU %>% dplyr::mutate(precal_value = str_extract_all(precal_value, "-?[:digit:]+\\.[:digit:]+"))
   chlA_RFU$precal_value <- as.numeric(chlA_RFU$precal_value)
 
 
@@ -513,7 +513,7 @@ PROCESS_DATA <- function(file, rawdatafolder, filename.db, probe = NULL, ImportT
   ))
   chlA_RFU <- chlA_RFU %>% dplyr::mutate(postcal_unit = str_extract_all(postcal_value, "[:upper:][:upper:][:upper:]"))
   chlA_RFU$postcal_unit <- as.character(chlA_RFU$postcal_unit)
-  chlA_RFU <- chlA_RFU %>% dplyr::mutate(postcal_value = str_extract_all(postcal_value, "[:digit:]+\\.[:digit:]+"))
+  chlA_RFU <- chlA_RFU %>% dplyr::mutate(postcal_value = str_extract_all(postcal_value, "-?[:digit:]+\\.[:digit:]+"))
   chlA_RFU$postcal_value <- as.numeric(chlA_RFU$postcal_value)
 
 
@@ -522,7 +522,7 @@ PROCESS_DATA <- function(file, rawdatafolder, filename.db, probe = NULL, ImportT
   ))
   chlA_RFU <- chlA_RFU %>% dplyr::mutate(raw_value_unit = str_extract_all(raw_value, "[:upper:][:upper:][:upper:]"))
   chlA_RFU$raw_value_unit <- as.character(chlA_RFU$raw_value_unit)
-  chlA_RFU <- chlA_RFU %>% dplyr::mutate(raw_value = str_extract_all(raw_value, "[:digit:]+\\.[:digit:]+"))
+  chlA_RFU <- chlA_RFU %>% dplyr::mutate(raw_value = str_extract_all(raw_value, "-?[:digit:]+\\.[:digit:]+"))
   chlA_RFU$raw_value <- as.numeric(chlA_RFU$raw_value)
 
 
@@ -531,7 +531,7 @@ PROCESS_DATA <- function(file, rawdatafolder, filename.db, probe = NULL, ImportT
   ))
   chlA_RFU <- chlA_RFU %>% dplyr::mutate(temp_unit = str_extract_all(temp, "[:upper:]"))
   chlA_RFU$temp_unit <- as.character(chlA_RFU$temp_unit)
-  chlA_RFU <- chlA_RFU %>% dplyr::mutate(temp = str_extract_all(temp, "[:digit:]+\\.[:digit:]+"))
+  chlA_RFU <- chlA_RFU %>% dplyr::mutate(temp = str_extract_all(temp, "-?[:digit:]+\\.[:digit:]+"))
   chlA_RFU$temp <- as.numeric(chlA_RFU$temp)
 
 
@@ -585,7 +585,7 @@ PROCESS_DATA <- function(file, rawdatafolder, filename.db, probe = NULL, ImportT
   ))
   turb <- turb %>% dplyr::mutate(standard_unit = str_extract_all(standard, "[:upper:][:upper:][:upper:]"))
   turb$standard_unit <- as.character(turb$standard_unit)
-  turb <- turb %>% dplyr::mutate(standard = str_extract_all(standard, "[:digit:]+\\.[:digit:]+"))
+  turb <- turb %>% dplyr::mutate(standard = str_extract_all(standard, "-?[:digit:]+\\.[:digit:]+"))
   turb$standard <- as.numeric(turb$standard)
 
 
@@ -594,7 +594,7 @@ PROCESS_DATA <- function(file, rawdatafolder, filename.db, probe = NULL, ImportT
   ))
   turb <- turb %>% dplyr::mutate(precal_unit = str_extract_all(precal_value, "[:upper:][:upper:][:upper:]"))
   turb$precal_unit <- as.character(turb$precal_unit)
-  turb <- turb %>% dplyr::mutate(precal_value = str_extract_all(precal_value, "[:digit:]+\\.[:digit:]+"))
+  turb <- turb %>% dplyr::mutate(precal_value = str_extract_all(precal_value, "-?[:digit:]+\\.[:digit:]+"))
   turb$precal_value <- as.numeric(turb$precal_value)
 
 
@@ -603,7 +603,7 @@ PROCESS_DATA <- function(file, rawdatafolder, filename.db, probe = NULL, ImportT
   ))
   turb <- turb %>% dplyr::mutate(postcal_unit = str_extract_all(postcal_value, "[:upper:][:upper:][:upper:]"))
   turb$postcal_unit <- as.character(turb$postcal_unit)
-  turb <- turb %>% dplyr::mutate(postcal_value = str_extract_all(postcal_value, "[:digit:]+\\.[:digit:]+"))
+  turb <- turb %>% dplyr::mutate(postcal_value = str_extract_all(postcal_value, "-?[:digit:]+\\.[:digit:]+"))
   turb$postcal_value <- as.numeric(turb$postcal_value)
 
 
@@ -612,7 +612,7 @@ PROCESS_DATA <- function(file, rawdatafolder, filename.db, probe = NULL, ImportT
   ))
   turb <- turb %>% dplyr::mutate(raw_value_unit = str_extract_all(raw_value, "[:upper:][:upper:][:upper:]"))
   turb$raw_value_unit <- as.character(turb$raw_value_unit)
-  turb <- turb %>% dplyr::mutate(raw_value = str_extract_all(raw_value, "[:digit:]+\\.[:digit:]+"))
+  turb <- turb %>% dplyr::mutate(raw_value = str_extract_all(raw_value, "-?[:digit:]+\\.[:digit:]+"))
   turb$raw_value <- as.numeric(turb$raw_value)
 
 
@@ -621,7 +621,7 @@ PROCESS_DATA <- function(file, rawdatafolder, filename.db, probe = NULL, ImportT
   ))
   turb <- turb %>% dplyr::mutate(temp_unit = str_extract_all(temp, "[:upper:]"))
   turb$temp_unit <- as.character(turb$temp_unit)
-  turb <- turb %>% dplyr::mutate(temp = str_extract_all(temp, "[:digit:]+\\.[:digit:]+"))
+  turb <- turb %>% dplyr::mutate(temp = str_extract_all(temp, "-?[:digit:]+\\.[:digit:]+"))
   turb$temp <- as.numeric(turb$temp)
 
 
@@ -679,7 +679,7 @@ PROCESS_DATA <- function(file, rawdatafolder, filename.db, probe = NULL, ImportT
   ))
   pH_df <- pH_df %>% dplyr::mutate(standard_unit = str_extract_all(standard, "[:lower:][:upper:]"))
   pH_df$standard_unit <- as.character(pH_df$standard_unit)
-  pH_df <- pH_df %>% dplyr::mutate(standard = str_extract_all(standard, "[:digit:]+\\.[:digit:]+"))
+  pH_df <- pH_df %>% dplyr::mutate(standard = str_extract_all(standard, "-?[:digit:]+\\.[:digit:]+"))
   pH_df$standard <- as.numeric(pH_df$standard)
 
 
@@ -690,7 +690,7 @@ PROCESS_DATA <- function(file, rawdatafolder, filename.db, probe = NULL, ImportT
   ))
   pH_df <- pH_df %>% dplyr::mutate(precal_unit = str_extract_all(precal_value, "[:lower:][:upper:]"))
   pH_df$precal_unit <- as.character(pH_df$precal_unit)
-  pH_df <- pH_df %>% dplyr::mutate(precal_value = str_extract_all(precal_value, "[:digit:]+\\.[:digit:]+"))
+  pH_df <- pH_df %>% dplyr::mutate(precal_value = str_extract_all(precal_value, "-?[:digit:]+\\.[:digit:]+"))
   pH_df$precal_value <- as.numeric(pH_df$precal_value)
 
 
@@ -701,7 +701,7 @@ PROCESS_DATA <- function(file, rawdatafolder, filename.db, probe = NULL, ImportT
   ))
   pH_df <- pH_df %>% dplyr::mutate(postcal_unit = str_extract_all(postcal_value, "[:lower:][:upper:]"))
   pH_df$postcal_unit <- as.character(pH_df$postcal_unit)
-  pH_df <- pH_df %>% dplyr::mutate(postcal_value = str_extract_all(postcal_value, "[:digit:]+\\.[:digit:]+"))
+  pH_df <- pH_df %>% dplyr::mutate(postcal_value = str_extract_all(postcal_value, "-?[:digit:]+\\.[:digit:]+"))
   pH_df$postcal_value <- as.numeric(pH_df$postcal_value)
 
 
@@ -712,7 +712,7 @@ PROCESS_DATA <- function(file, rawdatafolder, filename.db, probe = NULL, ImportT
   ))
   pH_df <- pH_df %>% dplyr::mutate(raw_value_unit = str_extract_all(raw_value, "[:lower:][:upper:]"))
   pH_df$raw_value_unit <- as.character(pH_df$raw_value_unit)
-  pH_df <- pH_df %>% dplyr::mutate(raw_value = str_extract_all(raw_value, "[:digit:]+\\.[:digit:]+"))
+  pH_df <- pH_df %>% dplyr::mutate(raw_value = str_extract_all(raw_value, "-?[:digit:]+\\.[:digit:]+"))
   pH_df$raw_value <- as.numeric(pH_df$raw_value)
 
 
@@ -723,7 +723,7 @@ PROCESS_DATA <- function(file, rawdatafolder, filename.db, probe = NULL, ImportT
   ))
   pH_df <- pH_df %>% dplyr::mutate(temp_unit = str_extract_all(temp, "[:upper:]"))
   pH_df$temp_unit <- as.character(pH_df$temp_unit)
-  pH_df <- pH_df %>% dplyr::mutate(temp = str_extract_all(temp, "[:digit:]+\\.[:digit:]+"))
+  pH_df <- pH_df %>% dplyr::mutate(temp = str_extract_all(temp, "-?[:digit:]+\\.[:digit:]+"))
   pH_df$temp <- as.numeric(pH_df$temp)
 
 

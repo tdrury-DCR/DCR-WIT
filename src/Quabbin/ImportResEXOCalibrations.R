@@ -790,9 +790,7 @@ PROCESS_DATA <- function(file, rawdatafolder, filename.db, probe = NULL, ImportT
   # Insert database queries here
 
   dbtbl1 <- "tblResEXOCalibrations"
-  exo_cal_tbl <- tbl(pool, DBI::Id(schema, dbtbl1))
-  exo_cal_db <- exo_cal_tbl %>%
-    collect()
+  exo_cal_db <- dbReadTable(pool, Id(schema = schema, table = dbtbl1))
 
   ## Compare data with existing to make sure none is being duplicated
   exo_cal_db$UniqueID <- paste(exo_cal_db$SondeID, format(exo_cal_db$DateTimeET_Start, format = "%Y-%m-%d %H:%M"), exo_cal_db$Parameter, exo_cal_db$Cal_Point, sep = "_")

@@ -162,9 +162,8 @@ PROCESS_DATA <- function(file, rawdatafolder, filename.db, probe = NULL, ImportT
   cond <- cond %>% dplyr::mutate(postcal_value = str_extract_all(postcal_value, "-?[:digit:]+\\.[:digit:]+"))
   cond$postcal_value <- as.numeric(cond$postcal_value)
 
-  cond$raw_value <- c(cond[20, 2])
-  cond <- cond %>% dplyr::mutate(raw_value_unit = str_extract_all(raw_value, "[:space:].[:upper:]\\/[:lower:][:lower:]"))
-  cond$raw_value_unit <- as.character(cond$raw_value_unit)
+  cond$raw_value <- c(cond[15, 2])
+  cond <- cond %>% dplyr::mutate(raw_value_unit = as.character("Cell Constant"))
   cond <- cond %>% dplyr::mutate(raw_value = str_extract_all(raw_value, "-?[:digit:]+\\.[:digit:]+"))
   cond$raw_value <- as.numeric(cond$raw_value)
 
